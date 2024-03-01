@@ -19,11 +19,14 @@ builder.create(_VENV_DIR)
 
 # Upgrade dependencies
 pip = [context.env_exe, "-m", "pip"]
+python = [context.env_exe]
 subprocess.check_call(pip + ["install", "--upgrade", "pip"])
 subprocess.check_call(pip + ["install", "--upgrade", "setuptools", "wheel"])
 
 # Install requirements
 subprocess.check_call(pip + ["install", "-r", str(_PROGRAM_DIR / "requirements.txt")])
+
+subprocess.check_call(python + ["setup.py", "install"], cwd=str(_PROGRAM_DIR / "speexdsp-ns-python"))
 
 if args.dev:
     # Install dev requirements

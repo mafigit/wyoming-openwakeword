@@ -20,6 +20,7 @@ from . import __version__
 from .const import EMB_FEATURES, MEL_SAMPLES, ClientData, WakeWordData
 from .openwakeword import ww_proc
 from .state import State, WakeWordState
+from speexdsp_ns import NoiseSuppression
 
 _LOGGER = logging.getLogger(__name__)
 _WAKE_WORD_WITH_VERSION = re.compile(r"^(.+)_(v[0-9.]+)$")
@@ -46,6 +47,7 @@ class OpenWakeWordEventHandler(AsyncEventHandler):
 
         # Only used when output_dir is set
         self.audio_writer: Optional[wave.Wave_write] = None
+        self.speex_ns = NoiseSuppression.create(160, 16000)
 
         _LOGGER.debug("Client connected: %s", self.client_id)
 
@@ -106,7 +108,7 @@ class OpenWakeWordEventHandler(AsyncEventHandler):
             chunk = self.converter.convert(AudioChunk.from_event(event))
 
             if self.audio_writer is not None:
-                self.audio_writer.writeframes(chunk.audio)
+                self.audio_writer.writeframes(self.speex_ns.process(chunk.audio))
 
             chunk_array = np.frombuffer(chunk.audio, dtype=np.int16).astype(np.float32)
 
